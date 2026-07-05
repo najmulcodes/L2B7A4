@@ -1,0 +1,267 @@
+// GearUp - Sports & Outdoor Gear Rental Marketplace
+// Prisma schema (Prisma ORM 7 - uses driver adapters, see src/lib/prisma.ts)
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma 7 reads connection strings for the CLI from prisma.config.ts.
+  // These are kept for compatibility with tooling that still reads schema.prisma directly.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum GearCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+}
+
+/// Order lifecycle: PLACED -> CONFIRMED -> PAID -> PICKED_UP -> RETURNED
+/// or PLACED -> CANCELLED (customer cancels before provider confirms).
+enum RentalOrderStatus {
+  PLACED
+  CONFIRMED
+  CANCELLED
+  PAID
+  PICKED_UP
+  RETURNED
+}
+
+enum PaymentProvider {
+  SSLCOMMERZ
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  password     String
+  phone        String?
+  role         UserRole
+  status       UserStatus @default(ACTIVE)
+  avatarUrl    String?
+  address      String?
+  /// Only meaningful when role = PROVIDER
+  businessName String?
+  bio          String?    @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  gearItems      GearItem[]      @relation("ProviderGear")
+  customerOrders RentalOrder[]   @relation("CustomerOrders")
+  providerOrders RentalOrder[]   @relation("ProviderOrders")
+  payments       Payment[]
+  reviews        Review[]
+  refreshTokens  RefreshToken[]
+
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  /// SHA-256 hash of the refresh token - the raw token is never stored
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  gearItems GearItem[]
+
+  @@index([isActive])
+  @@map("categories")
+}
+
+model GearItem {
+  id                String        @id @default(uuid())
+  providerId        String
+  categoryId        String
+  name              String
+  description       String        @db.Text
+  brand             String?
+  /// Public image URLs supplied by the provider
+  images            String[]
+  pricePerDay       Decimal       @db.Decimal(10, 2)
+  securityDeposit   Decimal       @default(0) @db.Decimal(10, 2)
+  quantityTotal     Int
+  quantityAvailable Int
+  condition         GearCondition @default(GOOD)
+  location          String
+  /// Free-form technical specs, e.g. { "weightKg": 12, "sizes": ["M", "L"] }
+  specifications    Json?
+  isActive          Boolean       @default(true)
+  avgRating         Float         @default(0)
+  reviewCount       Int           @default(0)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  provider   User               @relation("ProviderGear", fields: [providerId], references: [id], onDelete: Cascade)
+  category   Category           @relation(fields: [categoryId], references: [id])
+  orderItems RentalOrderItem[]
+  reviews    Review[]
+
+  @@index([categoryId])
+  @@index([providerId])
+  @@index([isActive])
+  @@index([location])
+  @@map("gear_items")
+}
+
+/// A rental order always belongs to exactly one provider - if a customer wants
+/// gear from two different providers, that is two separate orders. This keeps
+/// the single `status` state machine coherent (see RentalOrderStatus).
+model RentalOrder {
+  id              String            @id @default(uuid())
+  orderNumber     String            @unique
+  customerId      String
+  providerId      String
+  status          RentalOrderStatus @default(PLACED)
+  startDate       DateTime
+  endDate         DateTime
+  totalDays       Int
+  subtotal        Decimal           @db.Decimal(10, 2)
+  depositTotal    Decimal           @default(0) @db.Decimal(10, 2)
+  totalAmount     Decimal           @db.Decimal(10, 2)
+  deliveryAddress String?
+  notes           String?
+  cancelReason    String?
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  paidAt          DateTime?
+  pickedUpAt      DateTime?
+  returnedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  customer User               @relation("CustomerOrders", fields: [customerId], references: [id])
+  provider User               @relation("ProviderOrders", fields: [providerId], references: [id])
+  items    RentalOrderItem[]
+  payments Payment[]
+  reviews  Review[]
+
+  @@index([customerId])
+  @@index([providerId])
+  @@index([status])
+  @@map("rental_orders")
+}
+
+model RentalOrderItem {
+  id            String   @id @default(uuid())
+  rentalOrderId String
+  gearItemId    String
+  quantity      Int
+  /// Snapshot of GearItem.pricePerDay at order time (protects order history
+  /// from later price changes on the gear item)
+  pricePerDay   Decimal  @db.Decimal(10, 2)
+  days          Int
+  lineTotal     Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+
+  rentalOrder RentalOrder @relation(fields: [rentalOrderId], references: [id], onDelete: Cascade)
+  gearItem    GearItem    @relation(fields: [gearItemId], references: [id])
+
+  @@index([rentalOrderId])
+  @@index([gearItemId])
+  @@map("rental_order_items")
+}
+
+model Payment {
+  id                String          @id @default(uuid())
+  transactionId     String          @unique
+  rentalOrderId     String
+  customerId        String
+  provider          PaymentProvider @default(SSLCOMMERZ)
+  method            String?
+  amount            Decimal         @db.Decimal(10, 2)
+  currency          String          @default("BDT")
+  status            PaymentStatus   @default(PENDING)
+  gatewayValId      String?
+  gatewayBankTranId String?
+  cardType          String?
+  failureReason     String?
+  /// Raw gateway response payload, kept for audit/support purposes
+  rawResponse       Json?
+  paidAt            DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  rentalOrder RentalOrder @relation(fields: [rentalOrderId], references: [id])
+  customer    User        @relation(fields: [customerId], references: [id])
+
+  @@index([rentalOrderId])
+  @@index([customerId])
+  @@index([status])
+  @@map("payments")
+}
+
+model Review {
+  id            String   @id @default(uuid())
+  customerId    String
+  gearItemId    String
+  rentalOrderId String
+  rating        Int
+  comment       String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customer    User        @relation(fields: [customerId], references: [id])
+  gearItem    GearItem    @relation(fields: [gearItemId], references: [id])
+  rentalOrder RentalOrder @relation(fields: [rentalOrderId], references: [id])
+
+  // One review per gear item per completed order - prevents duplicate/spam reviews
+  @@unique([customerId, gearItemId, rentalOrderId])
+  @@index([gearItemId])
+  @@map("reviews")
+}
