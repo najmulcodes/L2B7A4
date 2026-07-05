@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    /* Language & Environment */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "useDefineForClassFields": true,
+
+    /* Modules - NodeNext resolves as CommonJS because package.json has no "type": "module" */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    /* TypeScript 6.0 requires this explicitly now (used to auto-include all @types/*) */
+    "types": ["node"],
+
+    /* Interop */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /* Strictness (explicit even though default in TS 6, for clarity/self-documentation) */
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    /* Emit */
+    "sourceMap": true,
+    "declaration": false,
+    "removeComments": true,
+
+    /* Interop for require() of prisma generated client, sslcommerz-lts etc. */
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*.ts", "prisma/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/generated"]
+}
