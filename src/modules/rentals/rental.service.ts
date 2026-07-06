@@ -14,7 +14,7 @@ import type {
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-const ORDER_INCLUDE = {
+export const ORDER_INCLUDE = {
   items: {
     include: {
       gearItem: {
@@ -192,8 +192,9 @@ export async function listProviderOrders(
 }
 
 /** Restores reserved inventory - used on both customer cancellation and
- * completed returns (RETURNED makes the physical unit available again). */
-async function restoreInventory(tx: Prisma.TransactionClient, orderId: string): Promise<void> {
+ * completed returns (RETURNED makes the physical unit available again).
+ * Exported for reuse by the admin module's force-cancel override. */
+export async function restoreInventory(tx: Prisma.TransactionClient, orderId: string): Promise<void> {
   const items = await tx.rentalOrderItem.findMany({ where: { rentalOrderId: orderId } });
   for (const item of items) {
     await tx.gearItem.update({
