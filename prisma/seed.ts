@@ -143,7 +143,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const kayak = await prisma.gearItem.create({
+  await prisma.gearItem.create({
     data: {
       providerId: provider1.id,
       categoryId: water.id,
@@ -217,7 +217,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const volleyballNet = await prisma.gearItem.create({
+  await prisma.gearItem.create({
     data: {
       providerId: provider2.id,
       categoryId: team.id,
@@ -253,7 +253,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const treadmill = await prisma.gearItem.create({
+  await prisma.gearItem.create({
     data: {
       providerId: provider2.id,
       categoryId: fitness.id,

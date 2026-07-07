@@ -45,7 +45,6 @@ export function createApp(): Application {
   } catch {
     // Docs are non-critical to the API's operation - log and continue rather
     // than let a missing/malformed spec file take the whole server down.
-    // eslint-disable-next-line no-console
     console.warn('OpenAPI spec could not be loaded - /api-docs will be unavailable.');
   }
 

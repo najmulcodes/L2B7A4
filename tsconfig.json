@@ -35,6 +35,6 @@
     /* Interop for require() of prisma generated client, sslcommerz-lts etc. */
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*.ts", "prisma/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "src/generated"]
 }

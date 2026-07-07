@@ -44,7 +44,6 @@ export async function createCategory(input: CreateCategoryInput) {
   // Guard against slug collisions from names that only differ by punctuation/case.
   let slug = baseSlug;
   let suffix = 1;
-  // eslint-disable-next-line no-await-in-loop
   while (await prisma.category.findUnique({ where: { slug } })) {
     slug = `${baseSlug}-${++suffix}`;
   }

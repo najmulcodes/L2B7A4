@@ -25,17 +25,17 @@ export const prisma: PrismaClient =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
-    log: isProduction
-      ? [{ emit: 'event', level: 'error' }]
-      : [
-          { emit: 'event', level: 'warn' },
-          { emit: 'event', level: 'error' },
-        ],
+    // A single static shape (rather than branching on isProduction) keeps
+    // PrismaClient's log-event generic unambiguous for $on below. Warn-level
+    // logs are cheap and useful in production too, so there's no downside
+    // to always emitting both.
+    log: [
+      { emit: 'event', level: 'warn' },
+      { emit: 'event', level: 'error' },
+    ],
   });
 
-// @ts-expect-error - Prisma's event-based log typing is awkward to narrow generically here
 prisma.$on('warn', (e) => logger.warn('Prisma warning', { message: e.message }));
-// @ts-expect-error - see above
 prisma.$on('error', (e) => logger.error('Prisma error', { message: e.message }));
 
 if (!isProduction) {

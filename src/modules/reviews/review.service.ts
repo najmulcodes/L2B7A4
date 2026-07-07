@@ -34,7 +34,9 @@ export async function createReview(customerId: string, input: CreateReviewInput)
   if (order.status !== 'RETURNED') {
     throw ApiError.badRequest('You can only review gear after the rental has been returned.');
   }
-  const orderedThisGear = order.items.some((item) => item.gearItemId === input.gearItemId);
+  const orderedThisGear = order.items.some(
+    (item: { gearItemId: string }) => item.gearItemId === input.gearItemId,
+  );
   if (!orderedThisGear) {
     throw ApiError.badRequest('This gear item was not part of the specified order.');
   }
