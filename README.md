@@ -74,6 +74,7 @@ gearup-backend/
 │       ├── reviews/
 │       └── admin/
 ├── .env.example
+├── Dockerfile
 ├── vercel.json
 └── render.yaml
 ```
@@ -184,6 +185,17 @@ npm run prisma:seed   # optional - only if you want the demo dataset in producti
 4. Deploy. Vercel builds `api/index.ts` independently of the `npm run build` script (its own zero-config Node/TypeScript builder handles that file directly).
 
 Either way, remember to update `APP_BASE_URL` to the final deployed URL so SSLCommerz's callbacks reach the right place.
+
+### Docker (alternative)
+
+A multi-stage `Dockerfile` is included (Render also accepts Docker-based web services as an alternative to its native Node buildpack). Build and run locally with:
+
+```bash
+docker build -t gearup-backend .
+docker run -p 5000:5000 --env-file .env gearup-backend
+```
+
+The image runs `npm run build` at build time and starts from the compiled `dist/server.js` - migrations still need to be run separately (`npx prisma migrate deploy`) against whatever `DIRECT_URL` the container's environment points at, since the image itself doesn't run migrations on start.
 
 ## Design decisions & known simplifications
 

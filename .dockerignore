@@ -1,0 +1,14 @@
+node_modules
+dist
+src/generated
+.git
+.github
+.env
+.env.*
+*.log
+coverage
+.vscode
+.idea
+postman
+SUBMISSION_CHECKLIST.md
+README.md
