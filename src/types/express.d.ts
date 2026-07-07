@@ -16,6 +16,8 @@ declare global {
        * params (e.g. `page` as a number) are attached here instead.
        */
       validatedQuery?: Record<string, unknown>;
+      /** Set by requestId.middleware.ts - a correlation id for tracing a request through logs. */
+      requestId: string;
     }
   }
 }

@@ -8,6 +8,7 @@ import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
 import { env, isProduction } from './config/env';
+import { requestId } from './middlewares/requestId.middleware';
 import { generalRateLimiter } from './middlewares/rateLimiter.middleware';
 import { notFoundHandler } from './middlewares/notFound.middleware';
 import { errorHandler } from './middlewares/error.middleware';
@@ -19,6 +20,7 @@ export function createApp(): Application {
   app.disable('x-powered-by');
   app.set('trust proxy', 1); // required behind Render/Vercel's reverse proxy for correct req.ip / rate limiting
 
+  app.use(requestId);
   app.use(helmet());
   app.use(
     cors({

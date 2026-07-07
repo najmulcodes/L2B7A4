@@ -67,6 +67,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, next: Ne
     logger.error(apiError.message, {
       path: req.path,
       method: req.method,
+      requestId: req.requestId,
       stack: err instanceof Error ? err.stack : undefined,
     });
   }
