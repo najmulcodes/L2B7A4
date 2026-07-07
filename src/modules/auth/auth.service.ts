@@ -36,7 +36,11 @@ interface TokenPair {
   refreshToken: string;
 }
 
-async function issueTokenPair(userId: string, email: string, role: 'CUSTOMER' | 'PROVIDER' | 'ADMIN'): Promise<TokenPair> {
+async function issueTokenPair(
+  userId: string,
+  email: string,
+  role: 'CUSTOMER' | 'PROVIDER' | 'ADMIN',
+): Promise<TokenPair> {
   const accessToken = signAccessToken({ sub: userId, email, role });
 
   const jti = newJti();
@@ -111,7 +115,12 @@ export async function refresh(rawRefreshToken: string) {
   const tokenHash = hashToken(rawRefreshToken);
   const stored = await prisma.refreshToken.findUnique({ where: { tokenHash } });
 
-  if (!stored || stored.revokedAt || stored.expiresAt < new Date() || stored.userId !== payload.sub) {
+  if (
+    !stored ||
+    stored.revokedAt ||
+    stored.expiresAt < new Date() ||
+    stored.userId !== payload.sub
+  ) {
     throw ApiError.unauthorized('This session has expired. Please log in again.');
   }
 

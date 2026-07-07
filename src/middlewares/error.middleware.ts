@@ -59,7 +59,10 @@ export function errorHandler(err: unknown, req: Request, res: Response, next: Ne
     apiError = ApiError.badRequest('Request body contains invalid JSON.');
   } else {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    logger.error('Unhandled error', { message, stack: err instanceof Error ? err.stack : undefined });
+    logger.error('Unhandled error', {
+      message,
+      stack: err instanceof Error ? err.stack : undefined,
+    });
     apiError = ApiError.internal();
   }
 

@@ -18,9 +18,7 @@ export async function listCategories(query: ListCategoriesQuery) {
   return prisma.category.findMany({
     where: {
       ...(query.includeInactive ? {} : { isActive: true }),
-      ...(query.search
-        ? { name: { contains: query.search, mode: 'insensitive' as const } }
-        : {}),
+      ...(query.search ? { name: { contains: query.search, mode: 'insensitive' as const } } : {}),
     },
     orderBy: { name: 'asc' },
   });

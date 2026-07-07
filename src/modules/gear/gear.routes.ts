@@ -27,11 +27,7 @@ publicGearRouter.get('/:id', validate({ params: uuidParamSchema }), getGearHandl
 export const providerGearRouter = Router();
 
 providerGearRouter.use(authenticate, requireRole('PROVIDER'));
-providerGearRouter.get(
-  '/',
-  validate({ query: listMyGearQuerySchema }),
-  listMyGearHandler,
-);
+providerGearRouter.get('/', validate({ query: listMyGearQuerySchema }), listMyGearHandler);
 providerGearRouter.post('/', validate({ body: createGearSchema }), createGearHandler);
 providerGearRouter.put(
   '/:id',

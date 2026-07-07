@@ -11,7 +11,8 @@ export interface PaginationParams {
 /** Normalizes raw (already-validated) page/limit numbers into Prisma skip/take. */
 export function resolvePagination(page?: number, limit?: number): PaginationParams {
   const safePage = page && page > 0 ? page : PAGINATION.DEFAULT_PAGE;
-  const safeLimit = limit && limit > 0 ? Math.min(limit, PAGINATION.MAX_LIMIT) : PAGINATION.DEFAULT_LIMIT;
+  const safeLimit =
+    limit && limit > 0 ? Math.min(limit, PAGINATION.MAX_LIMIT) : PAGINATION.DEFAULT_LIMIT;
 
   return {
     page: safePage,

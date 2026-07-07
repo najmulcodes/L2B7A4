@@ -5,7 +5,10 @@ import type { Prisma } from '../../generated/prisma/client';
 import type { PaginationMeta } from '../../utils/ApiResponse';
 import type { CreateReviewInput, ListReviewsQuery } from './review.validation';
 
-async function recomputeGearRating(tx: Prisma.TransactionClient, gearItemId: string): Promise<void> {
+async function recomputeGearRating(
+  tx: Prisma.TransactionClient,
+  gearItemId: string,
+): Promise<void> {
   const aggregate = await tx.review.aggregate({
     where: { gearItemId },
     _avg: { rating: true },

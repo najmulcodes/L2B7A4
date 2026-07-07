@@ -34,7 +34,9 @@ function calculateTotalDays(startDate: Date, endDate: Date): number {
 export async function createRentalOrder(customerId: string, input: CreateRentalOrderInput) {
   const horizonLimitMs = MAX_BOOKING_HORIZON_DAYS * MS_PER_DAY;
   if (input.startDate.getTime() - Date.now() > horizonLimitMs) {
-    throw ApiError.badRequest(`startDate cannot be more than ${MAX_BOOKING_HORIZON_DAYS} days out.`);
+    throw ApiError.badRequest(
+      `startDate cannot be more than ${MAX_BOOKING_HORIZON_DAYS} days out.`,
+    );
   }
 
   const gearItemIds = input.items.map((item) => item.gearItemId);
@@ -194,7 +196,10 @@ export async function listProviderOrders(
 /** Restores reserved inventory - used on both customer cancellation and
  * completed returns (RETURNED makes the physical unit available again).
  * Exported for reuse by the admin module's force-cancel override. */
-export async function restoreInventory(tx: Prisma.TransactionClient, orderId: string): Promise<void> {
+export async function restoreInventory(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+): Promise<void> {
   const items = await tx.rentalOrderItem.findMany({ where: { rentalOrderId: orderId } });
   for (const item of items) {
     await tx.gearItem.update({

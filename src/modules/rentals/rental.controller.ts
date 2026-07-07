@@ -13,7 +13,12 @@ export async function createRentalOrderHandler(req: Request, res: Response): Pro
     req.user!.id,
     req.body as CreateRentalOrderInput,
   );
-  sendSuccess(res, 201, 'Rental order placed successfully. / রেন্টাল অর্ডার সফলভাবে করা হয়েছে।', order);
+  sendSuccess(
+    res,
+    201,
+    'Rental order placed successfully. / রেন্টাল অর্ডার সফলভাবে করা হয়েছে।',
+    order,
+  );
 }
 
 export async function getRentalOrderHandler(req: Request, res: Response): Promise<void> {

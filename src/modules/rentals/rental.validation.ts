@@ -27,9 +27,7 @@ export const createRentalOrderSchema = z
 export type CreateRentalOrderInput = z.infer<typeof createRentalOrderSchema>;
 
 export const listRentalsQuerySchema = z.object({
-  status: z
-    .enum(['PLACED', 'CONFIRMED', 'CANCELLED', 'PAID', 'PICKED_UP', 'RETURNED'])
-    .optional(),
+  status: z.enum(['PLACED', 'CONFIRMED', 'CANCELLED', 'PAID', 'PICKED_UP', 'RETURNED']).optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
 });

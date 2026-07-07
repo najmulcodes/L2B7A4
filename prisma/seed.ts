@@ -87,22 +87,52 @@ async function main(): Promise<void> {
   console.log('Creating categories...');
   const [camping, water, winter, cycling, team, fitness] = await Promise.all([
     prisma.category.create({
-      data: { name: 'Camping & Hiking', slug: 'camping-hiking', description: 'Tents, backpacks, and trekking gear.', icon: 'tent' },
+      data: {
+        name: 'Camping & Hiking',
+        slug: 'camping-hiking',
+        description: 'Tents, backpacks, and trekking gear.',
+        icon: 'tent',
+      },
     }),
     prisma.category.create({
-      data: { name: 'Water Sports', slug: 'water-sports', description: 'Kayaks, snorkeling gear, and more.', icon: 'waves' },
+      data: {
+        name: 'Water Sports',
+        slug: 'water-sports',
+        description: 'Kayaks, snorkeling gear, and more.',
+        icon: 'waves',
+      },
     }),
     prisma.category.create({
-      data: { name: 'Winter Sports', slug: 'winter-sports', description: 'Snowboards, skis, and cold-weather gear.', icon: 'snowflake' },
+      data: {
+        name: 'Winter Sports',
+        slug: 'winter-sports',
+        description: 'Snowboards, skis, and cold-weather gear.',
+        icon: 'snowflake',
+      },
     }),
     prisma.category.create({
-      data: { name: 'Cycling', slug: 'cycling', description: 'Mountain bikes, road bikes, and accessories.', icon: 'bike' },
+      data: {
+        name: 'Cycling',
+        slug: 'cycling',
+        description: 'Mountain bikes, road bikes, and accessories.',
+        icon: 'bike',
+      },
     }),
     prisma.category.create({
-      data: { name: 'Team Sports', slug: 'team-sports', description: 'Football, volleyball, and team equipment.', icon: 'trophy' },
+      data: {
+        name: 'Team Sports',
+        slug: 'team-sports',
+        description: 'Football, volleyball, and team equipment.',
+        icon: 'trophy',
+      },
     }),
     prisma.category.create({
-      data: { name: 'Fitness & Training', slug: 'fitness-training', description: 'Home gym and personal training equipment.', icon: 'dumbbell' },
+      data: {
+        name: 'Fitness & Training',
+        slug: 'fitness-training',
+        description: 'Home gym and personal training equipment.',
+        icon: 'dumbbell',
+      },
     }),
   ]);
 
@@ -112,7 +142,8 @@ async function main(): Promise<void> {
       providerId: provider1.id,
       categoryId: camping.id,
       name: '4-Person Camping Tent',
-      description: 'Spacious waterproof tent, easy 15-minute setup, ideal for family camping trips or group treks in the hills.',
+      description:
+        'Spacious waterproof tent, easy 15-minute setup, ideal for family camping trips or group treks in the hills.',
       brand: 'Coleman',
       images: ['https://placehold.co/600x400?text=4P+Tent'],
       pricePerDay: 450,
@@ -130,7 +161,8 @@ async function main(): Promise<void> {
       providerId: provider1.id,
       categoryId: camping.id,
       name: 'Trekking Backpack 60L',
-      description: 'Ergonomic 60-liter trekking backpack with rain cover, adjustable straps, and multiple compartments.',
+      description:
+        'Ergonomic 60-liter trekking backpack with rain cover, adjustable straps, and multiple compartments.',
       brand: 'Deuter',
       images: ['https://placehold.co/600x400?text=Backpack+60L'],
       pricePerDay: 150,
@@ -148,7 +180,8 @@ async function main(): Promise<void> {
       providerId: provider1.id,
       categoryId: water.id,
       name: 'Single-Seat Kayak',
-      description: 'Stable, lightweight kayak perfect for calm rivers and lakes. Paddle and life jacket included.',
+      description:
+        'Stable, lightweight kayak perfect for calm rivers and lakes. Paddle and life jacket included.',
       brand: 'Perception',
       images: ['https://placehold.co/600x400?text=Kayak'],
       pricePerDay: 800,
@@ -166,7 +199,8 @@ async function main(): Promise<void> {
       providerId: provider1.id,
       categoryId: cycling.id,
       name: 'Mountain Bike - 21 Speed',
-      description: 'Trail-ready mountain bike with front suspension, disc brakes, and 21-speed gearing.',
+      description:
+        'Trail-ready mountain bike with front suspension, disc brakes, and 21-speed gearing.',
       brand: 'Trek',
       images: ['https://placehold.co/600x400?text=Mountain+Bike'],
       pricePerDay: 350,
@@ -202,7 +236,8 @@ async function main(): Promise<void> {
       providerId: provider2.id,
       categoryId: team.id,
       name: 'Football Match Set',
-      description: 'FIFA-approved match balls (x2), cones, and bibs - everything needed for a 5-a-side or 11-a-side match.',
+      description:
+        'FIFA-approved match balls (x2), cones, and bibs - everything needed for a 5-a-side or 11-a-side match.',
       brand: 'Nike',
       images: ['https://placehold.co/600x400?text=Football+Set'],
       pricePerDay: 300,
@@ -240,7 +275,8 @@ async function main(): Promise<void> {
       providerId: provider2.id,
       categoryId: water.id,
       name: 'Snorkeling Gear Set',
-      description: 'Mask, snorkel, and fins - available in multiple sizes. Great for Saint Martin or Kuakata trips.',
+      description:
+        'Mask, snorkel, and fins - available in multiple sizes. Great for Saint Martin or Kuakata trips.',
       brand: 'Cressi',
       images: ['https://placehold.co/600x400?text=Snorkel+Set'],
       pricePerDay: 200,
@@ -312,7 +348,8 @@ async function main(): Promise<void> {
       providerId: provider2.id,
       categoryId: camping.id,
       name: '2-Person Camping Tent',
-      description: 'Lightweight backpacking tent for two, quick pitch, great for solo trekkers or couples.',
+      description:
+        'Lightweight backpacking tent for two, quick pitch, great for solo trekkers or couples.',
       brand: 'Naturehike',
       images: ['https://placehold.co/600x400?text=2P+Tent'],
       pricePerDay: 300,
@@ -342,7 +379,9 @@ async function main(): Promise<void> {
       totalAmount: 3350,
       deliveryAddress: 'Mirpur, Dhaka',
       items: {
-        create: [{ gearItemId: tent4p.id, quantity: 1, pricePerDay: 450, days: 3, lineTotal: 1350 }],
+        create: [
+          { gearItemId: tent4p.id, quantity: 1, pricePerDay: 450, days: 3, lineTotal: 1350 },
+        ],
       },
     },
   });
@@ -363,7 +402,9 @@ async function main(): Promise<void> {
       confirmedAt: new Date(),
       deliveryAddress: 'Panchlaish, Chittagong',
       items: {
-        create: [{ gearItemId: backpack.id, quantity: 2, pricePerDay: 150, days: 3, lineTotal: 900 }],
+        create: [
+          { gearItemId: backpack.id, quantity: 2, pricePerDay: 150, days: 3, lineTotal: 900 },
+        ],
       },
     },
   });
@@ -411,7 +452,9 @@ async function main(): Promise<void> {
       pickedUpAt: new Date(Date.now() - DAY_MS),
       deliveryAddress: 'Panchlaish, Chittagong',
       items: {
-        create: [{ gearItemId: mountainBike.id, quantity: 1, pricePerDay: 350, days: 3, lineTotal: 1050 }],
+        create: [
+          { gearItemId: mountainBike.id, quantity: 1, pricePerDay: 350, days: 3, lineTotal: 1050 },
+        ],
       },
     },
   });
@@ -435,7 +478,9 @@ async function main(): Promise<void> {
       returnedAt: new Date(Date.now() - 7 * DAY_MS),
       deliveryAddress: 'Mirpur, Dhaka',
       items: {
-        create: [{ gearItemId: footballSet.id, quantity: 2, pricePerDay: 300, days: 3, lineTotal: 1800 }],
+        create: [
+          { gearItemId: footballSet.id, quantity: 2, pricePerDay: 300, days: 3, lineTotal: 1800 },
+        ],
       },
     },
   });
@@ -457,7 +502,9 @@ async function main(): Promise<void> {
       cancelReason: 'Change of travel plans',
       deliveryAddress: 'Panchlaish, Chittagong',
       items: {
-        create: [{ gearItemId: snowboard.id, quantity: 1, pricePerDay: 600, days: 3, lineTotal: 1800 }],
+        create: [
+          { gearItemId: snowboard.id, quantity: 1, pricePerDay: 600, days: 3, lineTotal: 1800 },
+        ],
       },
     },
   });
@@ -521,7 +568,8 @@ async function main(): Promise<void> {
       gearItemId: footballSet.id,
       rentalOrderId: order5.id,
       rating: 5,
-      comment: 'Great condition balls and the cone set made setting up practice really easy. Would rent again!',
+      comment:
+        'Great condition balls and the cone set made setting up practice really easy. Would rent again!',
     },
   });
 

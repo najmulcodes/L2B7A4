@@ -28,7 +28,11 @@ customerRentalRouter.post(
   validate({ body: createRentalOrderSchema }),
   createRentalOrderHandler,
 );
-customerRentalRouter.get('/', validate({ query: listRentalsQuerySchema }), listMyRentalOrdersHandler);
+customerRentalRouter.get(
+  '/',
+  validate({ query: listRentalsQuerySchema }),
+  listMyRentalOrdersHandler,
+);
 customerRentalRouter.get('/:id', validate({ params: uuidParamSchema }), getRentalOrderHandler);
 customerRentalRouter.patch(
   '/:id/cancel',
@@ -41,7 +45,11 @@ customerRentalRouter.patch(
 export const providerOrderRouter = Router();
 
 providerOrderRouter.use(authenticate, requireRole('PROVIDER'));
-providerOrderRouter.get('/', validate({ query: listRentalsQuerySchema }), listProviderOrdersHandler);
+providerOrderRouter.get(
+  '/',
+  validate({ query: listRentalsQuerySchema }),
+  listProviderOrdersHandler,
+);
 providerOrderRouter.get('/:id', validate({ params: uuidParamSchema }), getProviderOrderHandler);
 providerOrderRouter.patch(
   '/:id',

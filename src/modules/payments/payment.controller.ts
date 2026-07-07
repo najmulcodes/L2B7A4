@@ -68,7 +68,11 @@ export async function failCallbackHandler(req: Request, res: Response): Promise<
   res
     .status(200)
     .send(
-      renderStatusPage('Payment Failed', 'Your payment could not be processed. Please try again.', 'failure'),
+      renderStatusPage(
+        'Payment Failed',
+        'Your payment could not be processed. Please try again.',
+        'failure',
+      ),
     );
 }
 
@@ -76,7 +80,13 @@ export async function cancelCallbackHandler(req: Request, res: Response): Promis
   await paymentService.handleGatewayCancel(req.body as SslcommerzCallbackBody);
   res
     .status(200)
-    .send(renderStatusPage('Payment Cancelled', 'You cancelled the payment. No charge was made.', 'failure'));
+    .send(
+      renderStatusPage(
+        'Payment Cancelled',
+        'You cancelled the payment. No charge was made.',
+        'failure',
+      ),
+    );
 }
 
 /** SSLCommerz's server-to-server IPN - respond with plain JSON, no HTML needed. */

@@ -24,9 +24,7 @@ export const listAdminGearQuerySchema = z.object({
 export type ListAdminGearQuery = z.infer<typeof listAdminGearQuerySchema>;
 
 export const listAdminRentalsQuerySchema = z.object({
-  status: z
-    .enum(['PLACED', 'CONFIRMED', 'CANCELLED', 'PAID', 'PICKED_UP', 'RETURNED'])
-    .optional(),
+  status: z.enum(['PLACED', 'CONFIRMED', 'CANCELLED', 'PAID', 'PICKED_UP', 'RETURNED']).optional(),
   customerId: z.uuid().optional(),
   providerId: z.uuid().optional(),
   page: z.coerce.number().int().positive().default(1),
@@ -35,6 +33,10 @@ export const listAdminRentalsQuerySchema = z.object({
 export type ListAdminRentalsQuery = z.infer<typeof listAdminRentalsQuerySchema>;
 
 export const adminCancelOrderSchema = z.object({
-  cancelReason: z.string().trim().min(3, { error: 'cancelReason is required for an admin override' }).max(500),
+  cancelReason: z
+    .string()
+    .trim()
+    .min(3, { error: 'cancelReason is required for an admin override' })
+    .max(500),
 });
 export type AdminCancelOrderInput = z.infer<typeof adminCancelOrderSchema>;

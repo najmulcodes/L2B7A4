@@ -30,7 +30,17 @@ test('resolvePagination falls back to defaults for invalid (zero/negative) input
 });
 
 test('buildPaginationMeta computes totalPages correctly, including the zero-result edge case', () => {
-  assert.deepEqual(buildPaginationMeta(1, 10, 25), { page: 1, limit: 10, total: 25, totalPages: 3 });
+  assert.deepEqual(buildPaginationMeta(1, 10, 25), {
+    page: 1,
+    limit: 10,
+    total: 25,
+    totalPages: 3,
+  });
   assert.deepEqual(buildPaginationMeta(1, 10, 0), { page: 1, limit: 10, total: 0, totalPages: 0 });
-  assert.deepEqual(buildPaginationMeta(2, 10, 20), { page: 2, limit: 10, total: 20, totalPages: 2 });
+  assert.deepEqual(buildPaginationMeta(2, 10, 20), {
+    page: 2,
+    limit: 10,
+    total: 20,
+    totalPages: 2,
+  });
 });

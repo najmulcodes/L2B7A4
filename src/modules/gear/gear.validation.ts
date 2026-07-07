@@ -4,7 +4,11 @@ import { GEAR_CONDITIONS } from '../../config/constants';
 export const createGearSchema = z.object({
   categoryId: z.uuid({ error: 'A valid categoryId is required' }),
   name: z.string().trim().min(2, { error: 'Name must be at least 2 characters' }).max(150),
-  description: z.string().trim().min(10, { error: 'Description must be at least 10 characters' }).max(3000),
+  description: z
+    .string()
+    .trim()
+    .min(10, { error: 'Description must be at least 10 characters' })
+    .max(3000),
   brand: z.string().trim().max(100).optional(),
   images: z
     .array(z.url({ error: 'Each image must be a valid URL' }))

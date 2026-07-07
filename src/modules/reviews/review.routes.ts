@@ -10,7 +10,12 @@ const router = Router();
 router.get('/', validate({ query: listReviewsQuerySchema }), listReviewsHandler);
 
 router.use(authenticate);
-router.post('/', requireRole('CUSTOMER'), validate({ body: createReviewSchema }), createReviewHandler);
+router.post(
+  '/',
+  requireRole('CUSTOMER'),
+  validate({ body: createReviewSchema }),
+  createReviewHandler,
+);
 router.delete('/:id', validate({ params: uuidParamSchema }), deleteReviewHandler);
 
 export default router;

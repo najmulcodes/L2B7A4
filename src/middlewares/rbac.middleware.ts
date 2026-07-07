@@ -10,7 +10,11 @@ export function requireRole(...allowedRoles: UserRole[]) {
       return;
     }
     if (!allowedRoles.includes(req.user.role)) {
-      next(ApiError.forbidden(`This action requires one of the following roles: ${allowedRoles.join(', ')}`));
+      next(
+        ApiError.forbidden(
+          `This action requires one of the following roles: ${allowedRoles.join(', ')}`,
+        ),
+      );
       return;
     }
     next();

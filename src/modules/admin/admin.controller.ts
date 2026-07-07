@@ -20,7 +20,12 @@ export async function updateUserStatusHandler(req: Request, res: Response): Prom
     req.params.id as string,
     req.body as UpdateUserStatusInput,
   );
-  sendSuccess(res, 200, `User ${user.status === 'ACTIVE' ? 'activated' : 'suspended'} successfully.`, user);
+  sendSuccess(
+    res,
+    200,
+    `User ${user.status === 'ACTIVE' ? 'activated' : 'suspended'} successfully.`,
+    user,
+  );
 }
 
 export async function listAllGearHandler(req: Request, res: Response): Promise<void> {

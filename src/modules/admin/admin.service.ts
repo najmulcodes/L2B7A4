@@ -139,7 +139,9 @@ export async function forceCancelOrder(orderId: string, cancelReason: string) {
   const order = await prisma.rentalOrder.findUnique({ where: { id: orderId } });
   if (!order) throw ApiError.notFound('Rental order not found.');
   if (order.status === 'RETURNED' || order.status === 'CANCELLED') {
-    throw ApiError.badRequest(`This order is already ${order.status.toLowerCase()} and cannot be cancelled.`);
+    throw ApiError.badRequest(
+      `This order is already ${order.status.toLowerCase()} and cannot be cancelled.`,
+    );
   }
 
   const completedPayment = await prisma.payment.findFirst({
@@ -151,7 +153,9 @@ export async function forceCancelOrder(orderId: string, cancelReason: string) {
       logger.error('Cannot refund payment without a gateway bank transaction id', {
         paymentId: completedPayment.id,
       });
-      throw ApiError.internal('This payment is missing gateway details required to process a refund.');
+      throw ApiError.internal(
+        'This payment is missing gateway details required to process a refund.',
+      );
     }
 
     const refundResult = await sslcommerzGateway.refund({

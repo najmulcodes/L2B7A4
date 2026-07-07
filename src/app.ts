@@ -36,13 +36,18 @@ export function createApp(): Application {
   app.use(express.urlencoded({ extended: true }));
 
   app.get('/health', (_req: Request, res: Response) => {
-    res.status(200).json({ status: 'ok', service: 'gearup-backend', timestamp: new Date().toISOString() });
+    res
+      .status(200)
+      .json({ status: 'ok', service: 'gearup-backend', timestamp: new Date().toISOString() });
   });
 
   // --- API documentation ---
   try {
     const openapiPath = path.join(__dirname, '..', 'docs', 'openapi.yaml');
-    const openapiDocument = yaml.load(fs.readFileSync(openapiPath, 'utf8')) as Record<string, unknown>;
+    const openapiDocument = yaml.load(fs.readFileSync(openapiPath, 'utf8')) as Record<
+      string,
+      unknown
+    >;
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
   } catch {
     // Docs are non-critical to the API's operation - log and continue rather

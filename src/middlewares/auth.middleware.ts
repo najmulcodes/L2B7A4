@@ -12,7 +12,11 @@ function extractBearerToken(req: Request): string | null {
 }
 
 /** Requires a valid access token. Attaches `req.user`. */
-export async function authenticate(req: Request, _res: Response, next: NextFunction): Promise<void> {
+export async function authenticate(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     const token = extractBearerToken(req);
     if (!token) {

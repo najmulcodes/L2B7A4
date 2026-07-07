@@ -10,7 +10,9 @@ test('ApiError.notFound defaults to a sensible message and 404 status', () => {
 });
 
 test('ApiError.badRequest carries field-level errorDetails', () => {
-  const err = ApiError.badRequest('Validation failed', [{ field: 'email', message: 'Invalid email' }]);
+  const err = ApiError.badRequest('Validation failed', [
+    { field: 'email', message: 'Invalid email' },
+  ]);
   assert.equal(err.statusCode, 400);
   assert.equal(err.errorDetails.length, 1);
   assert.equal(err.errorDetails[0]?.field, 'email');
