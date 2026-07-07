@@ -1,0 +1,1010 @@
+openapi: 3.0.3
+info:
+  title: GearUp API
+  description: >
+    Sports & outdoor gear rental marketplace backend.
+    Roles: CUSTOMER (browse/rent gear), PROVIDER (list gear/fulfill orders),
+    ADMIN (platform oversight). Payments are processed via SSLCommerz.
+  version: 1.0.0
+  contact:
+    name: Najmul Hasan (Shuvro)
+servers:
+  - url: http://localhost:5000/api
+    description: Local development
+  - url: https://YOUR-DEPLOYMENT-URL/api
+    description: Production (replace with your deployed URL)
+
+tags:
+  - name: Auth
+  - name: Categories
+  - name: Gear
+  - name: Provider - Gear
+  - name: Rentals
+  - name: Provider - Orders
+  - name: Payments
+  - name: Reviews
+  - name: Admin
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        message: { type: string, example: 'Validation failed' }
+        errorDetails:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer, example: 1 }
+        limit: { type: integer, example: 10 }
+        total: { type: integer, example: 42 }
+        totalPages: { type: integer, example: 5 }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
+        role: { type: string, enum: [CUSTOMER, PROVIDER, ADMIN] }
+        status: { type: string, enum: [ACTIVE, SUSPENDED] }
+        avatarUrl: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        businessName: { type: string, nullable: true }
+        bio: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    AuthTokens:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+
+    Category:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string, nullable: true }
+        icon: { type: string, nullable: true }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    GearItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        providerId: { type: string, format: uuid }
+        categoryId: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        brand: { type: string, nullable: true }
+        images: { type: array, items: { type: string, format: uri } }
+        pricePerDay: { type: string, example: '450.00' }
+        securityDeposit: { type: string, example: '2000.00' }
+        quantityTotal: { type: integer }
+        quantityAvailable: { type: integer }
+        condition: { type: string, enum: [NEW, LIKE_NEW, GOOD, FAIR] }
+        location: { type: string }
+        specifications: { type: object, additionalProperties: true, nullable: true }
+        isActive: { type: boolean }
+        avgRating: { type: number }
+        reviewCount: { type: integer }
+
+    RentalOrderItem:
+      type: object
+      properties:
+        gearItemId: { type: string, format: uuid }
+        quantity: { type: integer }
+
+    RentalOrder:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        orderNumber: { type: string, example: 'GU-20260706-9F3A2C' }
+        customerId: { type: string, format: uuid }
+        providerId: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [PLACED, CONFIRMED, CANCELLED, PAID, PICKED_UP, RETURNED]
+        startDate: { type: string, format: date-time }
+        endDate: { type: string, format: date-time }
+        totalDays: { type: integer }
+        subtotal: { type: string }
+        depositTotal: { type: string }
+        totalAmount: { type: string }
+        deliveryAddress: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+
+    Payment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        transactionId: { type: string }
+        rentalOrderId: { type: string, format: uuid }
+        provider: { type: string, enum: [SSLCOMMERZ, STRIPE] }
+        method: { type: string, nullable: true }
+        amount: { type: string }
+        currency: { type: string, example: 'BDT' }
+        status: { type: string, enum: [PENDING, COMPLETED, FAILED, REFUNDED] }
+        paidAt: { type: string, format: date-time, nullable: true }
+
+    Review:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        customerId: { type: string, format: uuid }
+        gearItemId: { type: string, format: uuid }
+        rentalOrderId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, nullable: true }
+
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Forbidden:
+      description: Authenticated but not permitted to perform this action
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Conflict:
+      description: Conflicting state (e.g. duplicate, insufficient stock)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new CUSTOMER or PROVIDER account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role]
+              properties:
+                name: { type: string, example: 'Rafiq Ahmed' }
+                email: { type: string, format: email }
+                password: { type: string, example: 'Password123' }
+                phone: { type: string, example: '01811000001' }
+                role: { type: string, enum: [CUSTOMER, PROVIDER] }
+                businessName: { type: string, description: 'Required if role=PROVIDER' }
+                address: { type: string }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: '#/components/schemas/User' }
+                      accessToken: { type: string }
+                      refreshToken: { type: string }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: '#/components/schemas/User' }
+                      accessToken: { type: string }
+                      refreshToken: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/refresh-token:
+    post:
+      tags: [Auth]
+      summary: Exchange a refresh token for a new access/refresh token pair (rotates the refresh token)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties: { refreshToken: { type: string } }
+      responses:
+        '200':
+          description: New token pair
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/AuthTokens' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke a refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties: { refreshToken: { type: string } }
+      responses:
+        '200': { description: Logged out }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get the current user's profile
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/User' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Auth]
+      summary: Update the current user's profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                address: { type: string }
+                avatarUrl: { type: string, format: uri }
+                businessName: { type: string }
+                bio: { type: string }
+      responses:
+        '200': { description: Profile updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/me/password:
+    patch:
+      tags: [Auth]
+      summary: Change the current user's password (revokes all other sessions)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string }
+      responses:
+        '200': { description: Password changed }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: List categories
+      security: []
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        '200':
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Category' } }
+
+  /categories/{id}:
+    get:
+      tags: [Categories]
+      summary: Get a category by id
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Category
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/Category' } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/categories:
+    post:
+      tags: [Admin]
+      summary: Create a category (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                icon: { type: string }
+      responses:
+        '201': { description: Category created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /admin/categories/{id}:
+    put:
+      tags: [Admin]
+      summary: Update a category (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                description: { type: string }
+                icon: { type: string }
+                isActive: { type: boolean }
+      responses:
+        '200': { description: Category updated }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Admin]
+      summary: Soft-delete a category (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Category deleted }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /gear:
+    get:
+      tags: [Gear]
+      summary: Browse gear (public) - filter, search, sort, paginate
+      security: []
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: categoryId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: brand
+          schema: { type: string }
+        - in: query
+          name: location
+          schema: { type: string }
+        - in: query
+          name: condition
+          schema: { type: string, enum: [NEW, LIKE_NEW, GOOD, FAIR] }
+        - in: query
+          name: minPrice
+          schema: { type: number }
+        - in: query
+          name: maxPrice
+          schema: { type: number }
+        - in: query
+          name: availableOnly
+          schema: { type: boolean }
+        - in: query
+          name: sortBy
+          schema: { type: string, enum: [price_asc, price_desc, newest, rating] }
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 10 }
+      responses:
+        '200':
+          description: Paginated gear list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/GearItem' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+
+  /gear/{id}:
+    get:
+      tags: [Gear]
+      summary: Get gear details, including its category, provider, and latest reviews
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Gear item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/GearItem' } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /provider/gear:
+    get:
+      tags: [Provider - Gear]
+      summary: List gear owned by the current provider
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [active, inactive, all] }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated list of own gear }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Provider - Gear]
+      summary: List a new gear item (PROVIDER)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [categoryId, name, description, images, pricePerDay, quantityTotal, location]
+              properties:
+                categoryId: { type: string, format: uuid }
+                name: { type: string }
+                description: { type: string }
+                brand: { type: string }
+                images: { type: array, items: { type: string, format: uri } }
+                pricePerDay: { type: number }
+                securityDeposit: { type: number }
+                quantityTotal: { type: integer }
+                condition: { type: string, enum: [NEW, LIKE_NEW, GOOD, FAIR] }
+                location: { type: string }
+                specifications: { type: object, additionalProperties: true }
+      responses:
+        '201': { description: Gear item created }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /provider/gear/{id}:
+    put:
+      tags: [Provider - Gear]
+      summary: Update an owned gear item (PROVIDER)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '200': { description: Gear item updated }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Provider - Gear]
+      summary: Soft-delete an owned gear item (PROVIDER)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Gear item removed }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /rentals:
+    post:
+      tags: [Rentals]
+      summary: Place a rental order (CUSTOMER) - all items must belong to one provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, startDate, endDate]
+              properties:
+                items:
+                  type: array
+                  items: { $ref: '#/components/schemas/RentalOrderItem' }
+                startDate: { type: string, format: date }
+                endDate: { type: string, format: date }
+                deliveryAddress: { type: string }
+                notes: { type: string }
+      responses:
+        '201':
+          description: Order placed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/RentalOrder' } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    get:
+      tags: [Rentals]
+      summary: List the current customer's rental orders
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PLACED, CONFIRMED, CANCELLED, PAID, PICKED_UP, RETURNED] }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated orders }
+
+  /rentals/{id}:
+    get:
+      tags: [Rentals]
+      summary: Get a rental order (owner customer, owner provider, or admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Rental order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/RentalOrder' } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /rentals/{id}/cancel:
+    patch:
+      tags: [Rentals]
+      summary: Cancel own order (CUSTOMER, only while status=PLACED)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { cancelReason: { type: string } }
+      responses:
+        '200': { description: Order cancelled }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /provider/orders:
+    get:
+      tags: [Provider - Orders]
+      summary: List incoming orders for the current provider's gear
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PLACED, CONFIRMED, CANCELLED, PAID, PICKED_UP, RETURNED] }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated orders }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /provider/orders/{id}:
+    get:
+      tags: [Provider - Orders]
+      summary: Get one order (must belong to the current provider)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Order }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    patch:
+      tags: [Provider - Orders]
+      summary: Advance an order's status (CONFIRMED from PLACED, PICKED_UP from PAID, RETURNED from PICKED_UP)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [CONFIRMED, PICKED_UP, RETURNED] }
+      responses:
+        '200': { description: Order status updated }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /payments/create:
+    post:
+      tags: [Payments]
+      summary: Create an SSLCommerz payment session for a CONFIRMED order (CUSTOMER)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rentalOrderId]
+              properties: { rentalOrderId: { type: string, format: uuid } }
+      responses:
+        '201':
+          description: Gateway session created - redirect the customer's browser to paymentUrl
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      paymentUrl: { type: string, format: uri }
+                      transactionId: { type: string }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /payments/success:
+    post:
+      tags: [Payments]
+      summary: SSLCommerz browser redirect on success (gateway-called, not for direct use)
+      security: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema: { type: object, properties: { tran_id: { type: string }, val_id: { type: string } } }
+      responses:
+        '200': { description: HTML confirmation page }
+
+  /payments/fail:
+    post:
+      tags: [Payments]
+      summary: SSLCommerz browser redirect on failure (gateway-called)
+      security: []
+      responses:
+        '200': { description: HTML failure page }
+
+  /payments/cancel:
+    post:
+      tags: [Payments]
+      summary: SSLCommerz browser redirect on cancellation (gateway-called)
+      security: []
+      responses:
+        '200': { description: HTML cancelled page }
+
+  /payments/ipn:
+    post:
+      tags: [Payments]
+      summary: SSLCommerz server-to-server Instant Payment Notification (gateway-called)
+      security: []
+      responses:
+        '200': { description: IPN processed }
+
+  /payments/confirm:
+    post:
+      tags: [Payments]
+      summary: Manually re-verify a payment against SSLCommerz by transactionId (useful for Postman testing)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [transactionId]
+              properties: { transactionId: { type: string } }
+      responses:
+        '200':
+          description: Current (re-verified) payment status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/Payment' } }
+
+  /payments:
+    get:
+      tags: [Payments]
+      summary: List the current customer's payment history
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PENDING, COMPLETED, FAILED, REFUNDED] }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated payments }
+
+  /payments/{id}:
+    get:
+      tags: [Payments]
+      summary: Get a payment by id (owner customer, related provider, or admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Payment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/Payment' } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /reviews:
+    get:
+      tags: [Reviews]
+      summary: List reviews, optionally filtered by gear item
+      security: []
+      parameters:
+        - in: query
+          name: gearItemId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated reviews }
+    post:
+      tags: [Reviews]
+      summary: Review a gear item from a RETURNED order (CUSTOMER)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [gearItemId, rentalOrderId, rating]
+              properties:
+                gearItemId: { type: string, format: uuid }
+                rentalOrderId: { type: string, format: uuid }
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                comment: { type: string }
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: '#/components/schemas/Review' } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /reviews/{id}:
+    delete:
+      tags: [Reviews]
+      summary: Delete own review, or any review as ADMIN
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Review deleted }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List all users (ADMIN)
+      parameters:
+        - in: query
+          name: role
+          schema: { type: string, enum: [CUSTOMER, PROVIDER, ADMIN] }
+        - in: query
+          name: status
+          schema: { type: string, enum: [ACTIVE, SUSPENDED] }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated users }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/users/{id}:
+    patch:
+      tags: [Admin]
+      summary: Suspend or reactivate a user (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties: { status: { type: string, enum: [ACTIVE, SUSPENDED] } }
+      responses:
+        '200': { description: User status updated }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/gear:
+    get:
+      tags: [Admin]
+      summary: List all gear across every provider, including inactive items (ADMIN)
+      parameters:
+        - in: query
+          name: categoryId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: providerId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: isActive
+          schema: { type: boolean }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated gear }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/rentals:
+    get:
+      tags: [Admin]
+      summary: List all rental orders platform-wide (ADMIN)
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PLACED, CONFIRMED, CANCELLED, PAID, PICKED_UP, RETURNED] }
+        - in: query
+          name: customerId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: providerId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200': { description: Paginated orders }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/rentals/{id}/cancel:
+    patch:
+      tags: [Admin]
+      summary: Force-cancel any non-terminal order; refunds via SSLCommerz if a completed payment exists (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cancelReason]
+              properties: { cancelReason: { type: string } }
+      responses:
+        '200': { description: 'Order cancelled, refund initiated if applicable' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
