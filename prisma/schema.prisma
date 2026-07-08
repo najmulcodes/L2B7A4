@@ -9,10 +9,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Prisma 7 reads connection strings for the CLI from prisma.config.ts.
-  // These are kept for compatibility with tooling that still reads schema.prisma directly.
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------
