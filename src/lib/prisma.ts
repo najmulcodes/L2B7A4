@@ -35,8 +35,8 @@ export const prisma: PrismaClient =
     ],
   });
 
-prisma.$on('warn', (e) => logger.warn('Prisma warning', { message: e.message }));
-prisma.$on('error', (e) => logger.error('Prisma error', { message: e.message }));
+// Prisma event logging removed.
+// Render/Prisma 7 generated client types may not expose $on() event overloads.
 
 if (!isProduction) {
   globalForPrisma.prisma = prisma;
