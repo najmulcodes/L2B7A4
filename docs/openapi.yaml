@@ -11,7 +11,7 @@ info:
 servers:
   - url: http://localhost:5000/api
     description: Local development
-  - url: https://YOUR-DEPLOYMENT-URL/api
+  - url: https://https://l2b7a4.onrender.com/api
     description: Production (replace with your deployed URL)
 
 tags:
