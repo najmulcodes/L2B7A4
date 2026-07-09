@@ -8,6 +8,7 @@ import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
 import { env, isProduction } from './config/env';
+import { sendSuccess } from './utils/ApiResponse';
 import { requestId } from './middlewares/requestId.middleware';
 import { generalRateLimiter } from './middlewares/rateLimiter.middleware';
 import { notFoundHandler } from './middlewares/notFound.middleware';
@@ -34,6 +35,16 @@ export function createApp(): Application {
   // Required for SSLCommerz's success/fail/cancel/ipn callbacks, which POST
   // as application/x-www-form-urlencoded, not JSON.
   app.use(express.urlencoded({ extended: true }));
+
+  app.get('/', (_req: Request, res: Response) => {
+    sendSuccess(res, 200, 'GearUp API', {
+      service: 'GearUp API',
+      version: '1.0.0',
+      docs: '/api-docs',
+      health: '/health',
+      api: '/api',
+    });
+  });
 
   app.get('/health', (_req: Request, res: Response) => {
     res
