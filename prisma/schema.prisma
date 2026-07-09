@@ -2,9 +2,7 @@
 // Prisma schema (Prisma ORM 7 - uses driver adapters, see src/lib/prisma.ts)
 
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/generated/prisma"
-  moduleFormat = "cjs"
+  provider = "prisma-client-js"
 }
 
 datasource db {

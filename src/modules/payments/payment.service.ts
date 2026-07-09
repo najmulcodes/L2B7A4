@@ -4,7 +4,7 @@ import { logger } from '../../lib/logger';
 import { generateTransactionId } from '../../utils/generateId';
 import { resolvePagination, buildPaginationMeta } from '../../utils/pagination';
 import { sslcommerzGateway } from './sslcommerz.gateway';
-import type { Prisma } from '../../generated/prisma/client';
+import type { Prisma } from '@prisma/client';
 import type { PaginationMeta } from '../../utils/ApiResponse';
 import type { ListPaymentsQuery, SslcommerzCallbackBody } from './payment.validation';
 

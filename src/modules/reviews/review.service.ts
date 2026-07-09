@@ -1,8 +1,7 @@
 import { prisma } from '../../lib/prisma';
 import { ApiError } from '../../utils/ApiError';
 import { resolvePagination, buildPaginationMeta } from '../../utils/pagination';
-import type { Prisma } from '../../generated/prisma/client';
-import type { PaginationMeta } from '../../utils/ApiResponse';
+import { Prisma } from "@prisma/client";import type { PaginationMeta } from '../../utils/ApiResponse';
 import type { CreateReviewInput, ListReviewsQuery } from './review.validation';
 
 async function recomputeGearRating(
